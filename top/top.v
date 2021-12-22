@@ -80,7 +80,7 @@ wire payload_frame,payload_enable;
 
 camera #(
    .NUM_LANES(2),
-   .ZERO_ACCUMULATOR_WIDTH(3)
+   .ZERO_ACCUMULATOR_WIDTH(5)
 )
    camera_i(
     .clock_p(clk73),
@@ -106,7 +106,7 @@ camera #(
     .in_frame(in_frame)
 );
 
-assign led[4] = image_data_enable; //ftdi_rxd; //image_data_enable;
+assign led[4] = image_data_enable; //ftdi_rxd;
 
 reg [9:0] read_x;
 reg [9:0] read_y;
@@ -217,8 +217,6 @@ begin
   begin
       // rising edge detected here
       led[3:0] <= rgb[3:0];
-      //if (rgb_data_counter == 307200)
-      //    buffer_we <= 1'b0;
       if(rgb_data_counter<524289) 
       begin
           buffer_we <= 1'b0;
