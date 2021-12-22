@@ -1,7 +1,7 @@
 module buffer(
   input clk,
-  input [18:0] addr_in,
-  input [18:0] addr_out,
+  input [19:0] addr_in,
+  input [19:0] addr_out,
   input we,
   output reg [7:0] data_out,
   input reg [7:0] data_in

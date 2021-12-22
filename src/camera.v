@@ -36,8 +36,8 @@ module camera (
 	output wire line_end;
         output wire valid_packet;
         output wire video_data;
-        output wire in_frame;
-        output wire in_line;
+        output reg in_frame;
+        output reg in_line;
 	output wire generic_short_data_enable;
 	output wire [15:0] generic_short_data;
 	function automatic signed [NUM_LANES - 1:0] sv2v_cast_F4A11_signed;

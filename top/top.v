@@ -33,20 +33,18 @@ assign gpdi_dp[6] = data_dn[0];
 assign gpdi_dn[6] = data_dp[0];
 
 assign ftdi_txden = 1'b1;
-//assign ftdi_rxd = wifi_txd;
+//assign ftdi_rxd = wifi_txd; // pass to ESP32
 assign wifi_rxd = ftdi_txd;
 
-assign cam_enable = 1'b1;
+assign cam_enable = 1'b1; 
 
-wire [30:0] cam_clk_counter;
-//cam_data0_counter,cam_data1_counter;
-reg [19:0] rgb_data_counter;
-reg [18:0] rgb_data_counter_out;
+reg [19:0] rgb_data_counter = 0;
+reg [19:0] rgb_data_counter_out = 0;
 
 wire cam_clk_p;
 wire [1:0] cam_data_p;
 wire [1:0] clk;
-wire [1:0] data;
+wire [1:0] virtual_ch_data;
 
 ILVDS ILVDS_clk_inst (.A(dsiRX0_clk_dp),.Z(cam_clk_p));
 ILVDS ILVDS_data0_inst (.A(dsiRX0_dp[0]),.Z(cam_data_p[0]));
@@ -69,23 +67,23 @@ assign clk73 = clks[1];
     .clk_o(clks)
   );
 
-wire frame_start,frame_end,line_start,line_end,short_data_enable,interrupt,valid_packet, in_frame, in_line, vsync;
+wire frame_start,frame_end,line_start,line_end, in_frame, in_line;
+wire short_data_enable,interrupt,valid_packet;
 wire image_data_enable;
 
 wire [31:0] image_data;
 wire [5:0] image_data_type;
 wire [15:0] word_count;
 wire [15:0] short_data;
-wire payload_frame,payload_enable;
 
 camera #(
    .NUM_LANES(2),
-   .ZERO_ACCUMULATOR_WIDTH(5)
+   .ZERO_ACCUMULATOR_WIDTH(2)
 )
    camera_i(
     .clock_p(clk73),
     .data_p(cam_data_p),
-    .virtual_channel(data),
+    .virtual_channel(virtual_ch_data),
     // Total number of words in the current packet
     .word_count(word_count),
     .interrupt(interrupt),
@@ -111,7 +109,7 @@ assign led[4] = image_data_enable; //ftdi_rxd;
 reg [9:0] read_x;
 reg [9:0] read_y;
 wire [7:0] read_data;
-wire [1:0] div;
+reg [7:0] write_data;
 wire rgb_enable;
 wire [31:0] rgb;
 
@@ -121,9 +119,6 @@ rgb565 rgb_i(
     .rgb(rgb),
     .rgb_enable(rgb_enable)
 );
-
-//reg [7:0] buffer[0:307200];
-wire [19:0] buffer_counter;
 
 /*
 downsample ds_i(
@@ -149,7 +144,7 @@ buffer buffer_i(
   .addr_out(rgb_data_counter_out),
   .we(buffer_we),
   .data_out(read_data),
-  .data_in(rgb[7:0])
+  .data_in(write_data)
 );
 
 reg do_send = 1'b0;
@@ -191,7 +186,6 @@ begin
 			uart_holdoff <= uart_holdoff + 1'b1;
 
 		if (do_send) begin
-                        //buffer_we <= 1'b0;
                         rgb_data_counter_out <= {read_y,read_x};
 			if (read_x == 0 && read_y == 480) begin
 				do_send <= 1'b0;
@@ -217,15 +211,14 @@ begin
   begin
       // rising edge detected here
       led[3:0] <= rgb[3:0];
-      if(rgb_data_counter<524289) 
+      if(rgb_data_counter<524289) // I am continue counting to 524288 so I can activate data send 
       begin
           buffer_we <= 1'b0;
           rgb_data_counter = rgb_data_counter + 1'b1;
-          if(rgb_data_counter<307200) 
+          if(rgb_data_counter<307200) // 640x480
           begin
               buffer_we <= 1'b1;
-              //buffer[rgb_data_counter] <= {rgb[7:0]};
-              //buffer[rgb_data_counter] <= 8'b111111111
+              write_data <= rgb[7:0];
           end
       end
   end
