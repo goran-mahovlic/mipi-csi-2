@@ -78,7 +78,7 @@ wire [15:0] short_data;
 
 camera #(
    .NUM_LANES(2),
-   .ZERO_ACCUMULATOR_WIDTH(2)
+   .ZERO_ACCUMULATOR_WIDTH(3)
 )
    camera_i(
     .clock_p(clk73),
@@ -218,7 +218,8 @@ begin
           if(rgb_data_counter<307200) // 640x480
           begin
               buffer_we <= 1'b1;
-              write_data <= rgb[7:0];
+              write_data <= rgb_data_counter[7:0]; // set to counter for test  
+              // write_data <= rgb[7:0];
           end
       end
   end
