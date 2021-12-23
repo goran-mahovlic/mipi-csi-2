@@ -138,7 +138,7 @@ reg buffer_we;
 initial buffer_we = 1'b1;
 
 buffer buffer_i(
-  .clk(rgb_enable),
+  .clk(clk73),
   .addr_in(rgb_data_counter),
   .addr_out(rgb_data_counter_out),
   .we(buffer_we),
