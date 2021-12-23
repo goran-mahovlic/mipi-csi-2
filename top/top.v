@@ -211,17 +211,21 @@ begin
 reg last_rgb_enable;
 wire [7:5] value;
 reg savePic = 1'b1;
+reg startupDelay = 1'b0;
+reg [31:0] startupCounter;
 
 always @(posedge clk73)
 begin
-  if( {rgb_enable, last_rgb_enable} == 2'b10)
+
+  if( ({rgb_enable, last_rgb_enable} == 2'b10) && startupDelay)
   begin
+
       rgb_data_counter <= rgb_data_counter + 1'b1;
       led[4:0] <= rgb[4:0];
 
       if(rgb_data_counter<307200 && savePic) // 640x480 - save only once
       begin
-          write_data <= rgb[7:0];
+          write_data <= { rgb[26:21], rgb[10:9] };
       end
       else
         savePic <= 1'b0;
@@ -229,4 +233,10 @@ begin
   last_rgb_enable <= rgb_enable;
 end
 
+always @(posedge rgb_enable)
+begin
+    startupCounter <= startupCounter + 1'b1;
+    if(startupCounter[10])
+        startupDelay <= 1'b1;
+    end
 endmodule
