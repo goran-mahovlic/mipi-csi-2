@@ -190,7 +190,6 @@ begin
 			uart_holdoff <= uart_holdoff + 1'b1;
 
 		if (do_send) begin
-                        //rgb_data_counter_out <= {read_y,read_x};
 			if (read_x == 0 && read_y == 480) begin
 				do_send <= 1'b0;
 			end else begin
@@ -217,13 +216,12 @@ always @(posedge clk73)
 begin
   if( {rgb_enable, last_rgb_enable} == 2'b10)
   begin
-      rgb_data_counter = rgb_data_counter + 1'b1;
+      rgb_data_counter <= rgb_data_counter + 1'b1;
       led[4:0] <= rgb[4:0];
 
       if(rgb_data_counter<307200 && savePic) // 640x480 - save only once
       begin
-          //write_data <= rgb[7:0];
-          write_data <= rgb_data_counter;
+          write_data <= rgb[7:0];
       end
       else
         savePic <= 1'b0;
