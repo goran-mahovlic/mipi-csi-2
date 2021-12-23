@@ -51,15 +51,17 @@ ILVDS ILVDS_data0_inst (.A(dsiRX0_dp[0]),.Z(cam_data_p[0]));
 ILVDS ILVDS_data1_inst (.A(dsiRX0_dp[1]),.Z(cam_data_p[1]));
 
 wire [3:0] clks;
-wire clk12,clk73;
-assign clk12 = clks[0];
-assign clk73 = clks[1];
+wire clk9,clk73,clk18;
+assign clk9 = clks[1];
+assign clk73 = clks[2];
+assign clk18 = clks[0];
 
   ecp5pll
   #(
    .in_hz(73000000),
-   .out0_hz(12000000), .out0_tol_hz(10000000),
-   .out1_hz(73000000), .out1_deg(0), .out1_tol_hz(10000000)
+   .out0_hz(18250000), .out0_tol_hz(0),
+   .out1_hz(9125000), .out1_deg(0), .out1_tol_hz(0),
+   .out2_hz(73000000), .out2_tol_hz(0)
   )
   ecp5pll_inst
   (
@@ -95,16 +97,12 @@ camera #(
     .frame_end(frame_end),
     .line_start(line_start),
     .line_end(line_end),
-    // The  intention  of  the  Generic  Short  Packet  Data  Types  is  to  provide  a  mechanism  for  including  timing
-    // information for the opening/closing of shutters, triggering of flashes, etc within the data stream.
     .generic_short_data_enable(short_data_enable),
     .generic_short_data(short_data),
     .valid_packet(valid_packet),
     .in_line(in_line),
     .in_frame(in_frame)
 );
-
-assign led[4] = image_data_enable; //ftdi_rxd;
 
 reg [9:0] read_x;
 reg [9:0] read_y;
@@ -121,6 +119,7 @@ rgb565 rgb_i(
 );
 
 /*
+// Not used
 downsample ds_i(
    .pixel_clock(clk73),
    .in_line(in_line),
@@ -128,7 +127,7 @@ downsample ds_i(
    .pixel_data(rgb),
    .data_enable(rgb_enable),
 
-   .read_clock(clk12),
+   .read_clock(clk9),
    .read_x(read_x),
    .read_y(read_y),
    .read_q(read_data)
@@ -147,6 +146,7 @@ buffer buffer_i(
   .data_in(write_data)
 );
 
+
 reg do_send = 1'b0;
 wire uart_busy;
 reg uart_write;
@@ -156,19 +156,21 @@ reg btn_reg;
 reg [7:0] data_buffer;
 
 uart_tx uart_i (
-   .clk(clk12),
+   .clk(clk73),
    .resetn(1'b1),
    .ser_tx(ftdi_rxd),
-   .cfg_divider(12000000/115200),
+   .cfg_divider(73000000/115200),
    .data_we(uart_write),
-   .data(read_data), //data_buffer),
+   .data(read_data),
    .data_wait(uart_busy)
 );
 
-always @(posedge clk12)
+reg sendPicture = 1'b1;
+
+always @(posedge clk9)
 begin
 	//btn_reg <= btn[0];
-        btn_reg <= rgb_data_counter[19];
+        btn_reg <= (rgb_data_counter[19] && sendPicture);
 	if (btn_reg)
 		btn_debounce <= 0;
 	else if (!&(btn_debounce))
@@ -176,7 +178,9 @@ begin
 
 	uart_write <= 1'b0;
 	if (btn_reg && &btn_debounce && !do_send) begin
+                sendPicture <= 1'b0;
 		do_send <= 1'b1;
+                buffer_we <= 1'b0;
 		read_x <= 0;
 		read_y <= 0;
 	end
@@ -186,43 +190,44 @@ begin
 			uart_holdoff <= uart_holdoff + 1'b1;
 
 		if (do_send) begin
-                        rgb_data_counter_out <= {read_y,read_x};
+                        //rgb_data_counter_out <= {read_y,read_x};
 			if (read_x == 0 && read_y == 480) begin
 				do_send <= 1'b0;
 			end else begin
 				if (&uart_holdoff && !uart_busy && !uart_write) begin
 					uart_write <= 1'b1;
+                                        rgb_data_counter_out <= rgb_data_counter_out + 1'b1;
 					if (read_x == 639) begin
 						read_y <= read_y + 1'b1;
 						read_x <= 0;
 					end else begin
 						read_x <= read_x + 1'b1;
 					end
+                                        
 				end
 			end
 		end
 	end
 
 reg last_rgb_enable;
+wire [7:5] value;
+reg savePic = 1'b1;
 
 always @(posedge clk73)
 begin
   if( {rgb_enable, last_rgb_enable} == 2'b10)
   begin
-      // rising edge detected here
-      led[3:0] <= rgb[3:0];
-      if(rgb_data_counter<524289) // I am continue counting to 524288 so I can activate data send 
+      rgb_data_counter = rgb_data_counter + 1'b1;
+      led[4:0] <= rgb[4:0];
+
+      if(rgb_data_counter<307200 && savePic) // 640x480 - save only once
       begin
-          buffer_we <= 1'b0;
-          rgb_data_counter = rgb_data_counter + 1'b1;
-          if(rgb_data_counter<307200) // 640x480
-          begin
-              buffer_we <= 1'b1;
-              write_data <= rgb_data_counter[7:0]; // set to counter for test  
-              // write_data <= rgb[7:0];
-          end
+          //write_data <= rgb[7:0];
+          write_data <= rgb_data_counter;
       end
-  end
+      else
+        savePic <= 1'b0;
+   end
   last_rgb_enable <= rgb_enable;
 end
 
