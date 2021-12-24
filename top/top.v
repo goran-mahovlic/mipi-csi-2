@@ -16,7 +16,8 @@ module top(input clk_25mhz,
 		   output [4:0]led,
 		   input [1:0]btn,
                    input [1:0]data_dp,input [1:0]data_dn,
-                   output [7:6]gpdi_dp,output [7:6]gpdi_dn
+                   output [7:4]gpdi_dp, output [7:4]gpdi_dn
+                   //output [7:0] gpdi_dp,output [7:0] gpdi_dn
 		   );
 
 assign nc[0] = clk_dp;
@@ -27,10 +28,15 @@ assign nc[4] = gpio_scl;
 assign nc[5] = gpio_sda;
 assign nc[6] = cam_enable;
 
-assign gpdi_dp[7] = data_dn[1];
-assign gpdi_dn[7] = data_dp[1];
-assign gpdi_dp[6] = data_dn[0];
-assign gpdi_dn[6] = data_dp[0];
+//assign gpdi_dp[7] = data_dn[1];
+//assign gpdi_dn[7] = data_dp[1];
+//assign gpdi_dp[6] = data_dn[0];
+//assign gpdi_dn[6] = data_dp[0];
+
+assign led[3] = data_dn[1];
+assign led[2] = data_dp[1];
+assign led[1] = data_dn[0];
+assign led[0] = data_dp[0];
 
 assign ftdi_txden = 1'b1;
 //assign ftdi_rxd = wifi_txd; // pass to ESP32
@@ -77,6 +83,24 @@ wire [31:0] image_data;
 wire [5:0] image_data_type;
 wire [15:0] word_count;
 wire [15:0] short_data;
+
+wire [9:0] x;
+wire [9:0] y;
+reg [23:0] color;
+
+wire pixel_clock;
+
+assign pixel_clock = savePic ? clk73 : clk_25mhz;
+
+hdmi_video hdmi_video
+(
+    .clk_25mhz(clk_25mhz),
+    .x(x),
+    .y(y),
+    .color(color),
+    .gpdi_dp(gpdi_dp[7:4]),
+    .gpdi_dn(gpdi_dn[7:4])	
+);
 
 camera #(
    .NUM_LANES(2),
@@ -138,7 +162,7 @@ reg buffer_we;
 initial buffer_we = 1'b1;
 
 buffer buffer_i(
-  .clk(clk73),
+  .clk(pixel_clock),
   .addr_in(rgb_data_counter),
   .addr_out(rgb_data_counter_out),
   .we(buffer_we),
@@ -146,14 +170,13 @@ buffer buffer_i(
   .data_in(write_data)
 );
 
-
+/*
 reg do_send = 1'b0;
 wire uart_busy;
 reg uart_write;
 reg [12:0] uart_holdoff;
 reg [13:0] btn_debounce;
 reg btn_reg;
-reg [7:0] data_buffer;
 
 uart_tx uart_i (
    .clk(clk73),
@@ -165,20 +188,19 @@ uart_tx uart_i (
    .data_wait(uart_busy)
 );
 
-reg sendPicture = 1'b1;
+reg sendPicture = 1'b0;
 
 always @(posedge clk9)
 begin
-	//btn_reg <= btn[0];
-        btn_reg <= (rgb_data_counter[19] && sendPicture);
-	if (btn_reg)
-		btn_debounce <= 0;
-	else if (!&(btn_debounce))
-		btn_debounce <= btn_debounce + 1;
+//	btn_reg <= btn[0];
+//      btn_reg <= (sendPicture);
+//	if (btn_reg)
+//		btn_debounce <= 0;
+//	else if (!&(btn_debounce))
+//		btn_debounce <= btn_debounce + 1;
 
 	uart_write <= 1'b0;
-	if (btn_reg && &btn_debounce && !do_send) begin
-                sendPicture <= 1'b0;
+	if (!savePic && !do_send) begin
 		do_send <= 1'b1;
                 buffer_we <= 1'b0;
 		read_x <= 0;
@@ -207,6 +229,7 @@ begin
 			end
 		end
 	end
+*/
 
 reg last_rgb_enable;
 wire [7:5] value;
@@ -214,21 +237,39 @@ reg savePic = 1'b1;
 reg startupDelay = 1'b0;
 reg [31:0] startupCounter;
 
+//  assign red_d[7:0] = in_color[23:16];
+//  assign green_d[7:0] = in_color[15:8];
+//  assign blue_d[7:0] = in_color[7:0];
+//  111 111 11
+
+always @(posedge clk_25mhz)
+begin
+    if(!savePic && !buffer_we) begin
+        rgb_data_counter_out <= (((y * 640) - 640) + x);
+        color <= { read_data[7:5] , 5'b11111 , read_data[4:2] , 5'b11111 , read_data[1:0] , 6'b111111 };
+    end
+    else begin
+        color <= 24'hffffff;
+    end
+end
+
 always @(posedge clk73)
 begin
 
-  if( ({rgb_enable, last_rgb_enable} == 2'b10) && startupDelay)
+  if( ({rgb_enable, last_rgb_enable} == 2'b10) && startupDelay )
   begin
 
       rgb_data_counter <= rgb_data_counter + 1'b1;
-      led[4:0] <= rgb[4:0];
+      led[4] <= rgb[4];
 
       if(rgb_data_counter<307200 && savePic) // 640x480 - save only once
       begin
-          write_data <= { rgb[26:21], rgb[10:9] };
+          write_data <= { rgb[31:29], rgb[26:24] , rgb[20:19] };  // read_data[7:5] , 5'b0 , read_data[4:2] , 5'b0 , read_data[1:0] , 6'b0
       end
-      else
-        savePic <= 1'b0;
+      else begin
+          savePic <= 1'b0;
+          buffer_we <= 1'b0;
+      end
    end
   last_rgb_enable <= rgb_enable;
 end
@@ -236,7 +277,8 @@ end
 always @(posedge rgb_enable)
 begin
     startupCounter <= startupCounter + 1'b1;
-    if(startupCounter[10])
+    if(startupCounter[24])
         startupDelay <= 1'b1;
     end
+
 endmodule
