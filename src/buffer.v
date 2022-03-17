@@ -7,7 +7,7 @@ module buffer(
   input reg [7:0] data_in
 );
 
-reg [7:0] buffer[0:307200];
+reg [31:0] buffer[0:153600];
 
   always @(posedge clk) begin
           if(we)

@@ -2,7 +2,7 @@
 PROJECT = CSI
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = um-85
+FPGA_SIZE = um-45
 FPGA_PACKAGE = CABGA381
 
 # ******* if programming with OpenOCD *******
@@ -18,7 +18,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../constraints/ulx4m_v005.lpf
+CONSTRAINTS = ../../constraints/ulx4m-ld_v001.lpf
 #TOP_MODULE = top
 #TOP_MODULE_FILE = top/$(TOP_MODULE).v
 TOP_MODULE = top
@@ -31,6 +31,10 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../ecp5pll/hdl/sv/ecp5pll.sv \
+  src/clock.sv \
+  src/i2c_master.sv \
+  src/i2c_core.sv \
+  src/ov5647.sv \
   src/d_phy_receiver.v \
   src/camera.v \
   src/decoders/rgb565.v \
@@ -79,7 +83,7 @@ VHDL_FILES = \
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2
-NEXTPNR_OPTIONS = --timing-allow-fail --speed 8
+NEXTPNR_OPTIONS = --timing-allow-fail --speed 6
 
 SCRIPTS = ../../scripts
 include $(SCRIPTS)/diamond_path.mk

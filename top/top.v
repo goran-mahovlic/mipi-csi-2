@@ -1,60 +1,50 @@
 module top(input clk_25mhz,
-                   input cam_sda,
-                   input cam_scl,
-                   input gpio_sda, 
-                   input gpio_scl,
-                   output [6:0] nc,
+                   inout cam_sda,
+                   inout cam_scl,
+                   inout gpio_sda,
+                   inout gpio_scl,
                    input ftdi_txd, wifi_txd,
                    output ftdi_rxd, wifi_rxd,
                    output ftdi_txden,
-                   input cam_enable_gpio,
                    output cam_enable,
 		   input dsiRX0_clk_dp, 
-                   input [1:0] dsiRX0_dp, 
-                   input clk_dp,clk_dn, 
-                   //input [1:0] dsiRX0_dn,
-		   output [4:0]led,
-		   input [1:0]btn,
-                   input [1:0]data_dp,input [1:0]data_dn,
-                   output [7:4]gpdi_dp, output [7:4]gpdi_dn
-                   //output [7:0] gpdi_dp,output [7:0] gpdi_dn
+                   input dsiRX1_clk_dp,
+                   input [1:0] dsiRX0_dp,
+                   input [1:0] dsiRX1_dp,
+		   output [7:0]led,
+		   input [2:0]btn,
+                   output [3:0]gpdi_dp, output [3:0]gpdi_dn
 		   );
 
-assign nc[0] = clk_dp;
-assign nc[1] = clk_dn;
-assign nc[2] = cam_scl;
-assign nc[3] = cam_sda;
-assign nc[4] = gpio_scl;
-assign nc[5] = gpio_sda;
-assign nc[6] = cam_enable;
-
-//assign gpdi_dp[7] = data_dn[1];
-//assign gpdi_dn[7] = data_dp[1];
-//assign gpdi_dp[6] = data_dn[0];
-//assign gpdi_dn[6] = data_dp[0];
-
-assign led[3] = data_dn[1];
-assign led[2] = data_dp[1];
-assign led[1] = data_dn[0];
-assign led[0] = data_dp[0];
-
 assign ftdi_txden = 1'b1;
-//assign ftdi_rxd = wifi_txd; // pass to ESP32
+assign ftdi_rxd = wifi_txd; // pass to ESP32
 assign wifi_rxd = ftdi_txd;
 
 assign cam_enable = 1'b1; 
 
+//assign gpio_sda = cam_sda;
+//assign gpio_scl = cam_scl;
+
 reg [19:0] rgb_data_counter = 0;
 reg [19:0] rgb_data_counter_out = 0;
 
-wire cam_clk_p;
-wire [1:0] cam_data_p;
+wire cam0_clk_p, cam1_clk_p;
+wire [1:0] cam0_data_p, cam1_data_p;
 wire [1:0] clk;
 wire [1:0] virtual_ch_data;
+reg [32:0] counter0;
+reg [32:0] counter1;
 
-ILVDS ILVDS_clk_inst (.A(dsiRX0_clk_dp),.Z(cam_clk_p));
-ILVDS ILVDS_data0_inst (.A(dsiRX0_dp[0]),.Z(cam_data_p[0]));
-ILVDS ILVDS_data1_inst (.A(dsiRX0_dp[1]),.Z(cam_data_p[1]));
+ILVDS ILVDS_cam0_clk_inst (.A(dsiRX0_clk_dp),.Z(cam0_clk_p));
+ILVDS ILVDS_cam0_data0_inst (.A(dsiRX0_dp[0]),.Z(cam0_data_p[0]));
+ILVDS ILVDS_cam0_data1_inst (.A(dsiRX0_dp[1]),.Z(cam0_data_p[1]));
+
+ILVDS ILVDS_cam1_clk_inst (.A(dsiRX1_clk_dp),.Z(cam1_clk_p));
+ILVDS ILVDS_cam1_data0_inst (.A(dsiRX1_dp[0]),.Z(cam1_data_p[0]));
+ILVDS ILVDS_cam1_data1_inst (.A(dsiRX1_dp[1]),.Z(cam1_data_p[1]));
+
+//assign led[0] = cam_sda;
+//assign led[1] = cam_scl;
 
 wire [3:0] clks;
 wire clk9,clk73,clk18;
@@ -71,9 +61,47 @@ assign clk18 = clks[0];
   )
   ecp5pll_inst
   (
-    .clk_i(cam_clk_p),
+    .clk_i(cam0_clk_p),
     .clk_o(clks)
   );
+
+wire [1:0] mode = 2;
+
+ov5647 #(
+   .INPUT_CLK_RATE(25000000),
+   .TARGET_SCL_RATE(400000)
+   //.ADDRESS(54)
+)
+ ov5647_0_i(
+  .clk_in(clk_25mhz),
+  .scl(cam_scl),
+  .sda(cam_sda),
+  .mode(mode),
+  .resolution(3),
+  .format(1)
+//  .sensor_state(led[2:0])
+  //.ready(led[4]),
+  //.power_enable(led[5]),
+  //.model_err(led[5])
+ // .nack_err(led[5])
+);
+
+ov5647 #(
+   .INPUT_CLK_RATE(25000000),
+   .TARGET_SCL_RATE(400000)
+//   .ADDRESS(54)
+)
+   ov5647_1_i(
+    .clk_in(clk_25mhz),
+    .scl(gpio_scl),
+    .sda(gpio_sda),
+    .mode(mode),
+    .resolution(3),
+    .format(1)
+//    .model_err(led[0])
+//    .ready(led[2]),
+//    .power_enable(led[3])
+);
 
 wire frame_start,frame_end,line_start,line_end, in_frame, in_line;
 wire short_data_enable,interrupt,valid_packet;
@@ -98,8 +126,8 @@ hdmi_video hdmi_video
     .x(x),
     .y(y),
     .color(color),
-    .gpdi_dp(gpdi_dp[7:4]),
-    .gpdi_dn(gpdi_dn[7:4])	
+    .gpdi_dp(gpdi_dp[3:0]),
+    .gpdi_dn(gpdi_dn[3:0])	
 );
 
 camera #(
@@ -107,8 +135,8 @@ camera #(
    .ZERO_ACCUMULATOR_WIDTH(3)
 )
    camera_i(
-    .clock_p(clk73),
-    .data_p(cam_data_p),
+    .clock_p(pixel_clock),
+    .data_p(cam0_data_p),
     .virtual_channel(virtual_ch_data),
     // Total number of words in the current packet
     .word_count(word_count),
@@ -130,22 +158,29 @@ camera #(
 
 reg [9:0] read_x;
 reg [9:0] read_y;
-wire [7:0] read_data;
-reg [7:0] write_data;
+wire [23:0] read_data;
+reg [23:0] write_data;
 wire rgb_enable;
 wire [31:0] rgb;
+/*
+raw8 raw8_i(
 
+
+);
+*/
+/*
 rgb565 rgb_i(
     .image_data(image_data),
     .image_data_enable(image_data_enable),
     .rgb(rgb),
     .rgb_enable(rgb_enable)
 );
+*/
 
 /*
 // Not used
 downsample ds_i(
-   .pixel_clock(clk73),
+   .pixel_clock(pixel_clock),
    .in_line(in_line),
    .in_frame(in_frame),
    .pixel_data(rgb),
@@ -212,7 +247,7 @@ begin
 			uart_holdoff <= uart_holdoff + 1'b1;
 
 		if (do_send) begin
-			if (read_x == 0 && read_y == 480) begin
+			if (read_x == 0 && read_y == 240) begin
 				do_send <= 1'b0;
 			end else begin
 				if (&uart_holdoff && !uart_busy && !uart_write) begin
@@ -242,43 +277,74 @@ reg [31:0] startupCounter;
 //  assign blue_d[7:0] = in_color[7:0];
 //  111 111 11
 
-always @(posedge clk_25mhz)
+always @(posedge pixel_clock)
 begin
     if(!savePic && !buffer_we) begin
         rgb_data_counter_out <= (((y * 640) - 640) + x);
-        color <= { read_data[7:5] , 5'b11111 , read_data[4:2] , 5'b11111 , read_data[1:0] , 6'b111111 };
+        color <= { read_data[7:5] , 5'b00000 , read_data[4:2] , 5'b00000 , read_data[1:0] , 6'b000000 };
     end
     else begin
         color <= 24'hffffff;
     end
 end
 
-always @(posedge clk73)
+always @(posedge pixel_clock)
 begin
 
-  if( ({rgb_enable, last_rgb_enable} == 2'b10) && startupDelay )
+  if( ({image_data_enable, last_rgb_enable} == 2'b10) && startupDelay )
   begin
 
-      rgb_data_counter <= rgb_data_counter + 1'b1;
-      led[4] <= rgb[4];
+      if(frame_start)
+          rgb_data_counter <= 1'b0;
 
-      if(rgb_data_counter<307200 && savePic) // 640x480 - save only once
+      rgb_data_counter <= rgb_data_counter + 1'b1;
+
+      //led[7:0] <= rgb[7:0];
+
+      if(rgb_data_counter<153600 && savePic) // 640x480 - save only once
       begin
-          write_data <= { rgb[31:29], rgb[26:24] , rgb[20:19] };  // read_data[7:5] , 5'b0 , read_data[4:2] , 5'b0 , read_data[1:0] , 6'b0
-      end
+          //write_data <= { image_data[29] , image_data[28] , image_data[27] , image_data[23] , image_data[22] , image_data[21] , image_data[17], image_data[16] };  // read_data[7:5] , 5'b0 , read_data[4:2] , 5'b0 , read_data[1:0] , 6'b0
+          //write_data <= { image_data[31:29] , image_data[23:21], image_data[15:14] } ; //rgb[20] , rgb[19] }; 
+          write_data <= { image_data[23:21] , image_data[2:0] , image_data[14:13] }; // image_data[15:3], image_data[7:6] };
+      end //rgb[29] , rgb[28] , rgb[27]        g -- rgb[7:5], 19, 16   29:27 == 14 15     0?
+      // 23:21
       else begin
           savePic <= 1'b0;
           buffer_we <= 1'b0;
       end
    end
-  last_rgb_enable <= rgb_enable;
+  last_rgb_enable <= image_data_enable;
 end
 
-always @(posedge rgb_enable)
+always @(posedge image_data_enable)
 begin
     startupCounter <= startupCounter + 1'b1;
-    if(startupCounter[24])
+    if(startupCounter[20])
         startupDelay <= 1'b1;
-    end
+end
+
+always @(posedge cam0_clk_p)
+begin
+    counter0 <= counter0 + 1'b1;
+//    if(counter0[26])
+//     mode <= 2'b01;
+//    if(counter0[27])
+//     mode <= 2'b10;
+end
+
+always @(posedge cam1_clk_p)
+begin
+    counter1 <= counter1 + 1'b1;
+end
+
+//assign led[7:6] = counter0[25:24];
+//assign led[1:0] = counter1[25:24];
+assign led[7:3] = 5'b00000;
+//assign led[4] = 1'b0;
+//assign led[3] = 1'b0;
+//assign led[2] = 1'b0;
+//assign led[1] = 1'b0;
+//assign led[0] = 1'b0;
+//assign led[2:1] = mode;
 
 endmodule
