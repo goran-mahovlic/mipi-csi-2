@@ -162,36 +162,13 @@ wire [23:0] read_data;
 reg [23:0] write_data;
 wire rgb_enable;
 wire [31:0] rgb;
-/*
+
 raw8 raw8_i(
-
-
-);
-*/
-/*
-rgb565 rgb_i(
     .image_data(image_data),
     .image_data_enable(image_data_enable),
-    .rgb(rgb),
-    .rgb_enable(rgb_enable)
+    .raw(rgb),
+    .raw_enable(rgb_enable)
 );
-*/
-
-/*
-// Not used
-downsample ds_i(
-   .pixel_clock(pixel_clock),
-   .in_line(in_line),
-   .in_frame(in_frame),
-   .pixel_data(rgb),
-   .data_enable(rgb_enable),
-
-   .read_clock(clk9),
-   .read_x(read_x),
-   .read_y(read_y),
-   .read_q(read_data)
-   );
-*/
 
 reg buffer_we;
 initial buffer_we = 1'b1;
@@ -204,67 +181,6 @@ buffer buffer_i(
   .data_out(read_data),
   .data_in(write_data)
 );
-
-/*
-reg do_send = 1'b0;
-wire uart_busy;
-reg uart_write;
-reg [12:0] uart_holdoff;
-reg [13:0] btn_debounce;
-reg btn_reg;
-
-uart_tx uart_i (
-   .clk(clk73),
-   .resetn(1'b1),
-   .ser_tx(ftdi_rxd),
-   .cfg_divider(73000000/115200),
-   .data_we(uart_write),
-   .data(read_data),
-   .data_wait(uart_busy)
-);
-
-reg sendPicture = 1'b0;
-
-always @(posedge clk9)
-begin
-//	btn_reg <= btn[0];
-//      btn_reg <= (sendPicture);
-//	if (btn_reg)
-//		btn_debounce <= 0;
-//	else if (!&(btn_debounce))
-//		btn_debounce <= btn_debounce + 1;
-
-	uart_write <= 1'b0;
-	if (!savePic && !do_send) begin
-		do_send <= 1'b1;
-                buffer_we <= 1'b0;
-		read_x <= 0;
-		read_y <= 0;
-	end
-		if (uart_busy)
-			uart_holdoff <= 0;
-		else if (!&(uart_holdoff))
-			uart_holdoff <= uart_holdoff + 1'b1;
-
-		if (do_send) begin
-			if (read_x == 0 && read_y == 240) begin
-				do_send <= 1'b0;
-			end else begin
-				if (&uart_holdoff && !uart_busy && !uart_write) begin
-					uart_write <= 1'b1;
-                                        rgb_data_counter_out <= rgb_data_counter_out + 1'b1;
-					if (read_x == 639) begin
-						read_y <= read_y + 1'b1;
-						read_x <= 0;
-					end else begin
-						read_x <= read_x + 1'b1;
-					end
-                                        
-				end
-			end
-		end
-	end
-*/
 
 reg last_rgb_enable;
 wire [7:5] value;
@@ -348,3 +264,84 @@ assign led[7:3] = 5'b00000;
 //assign led[2:1] = mode;
 
 endmodule
+
+
+/*
+// Not used
+downsample ds_i(
+   .pixel_clock(pixel_clock),
+   .in_line(in_line),
+   .in_frame(in_frame),
+   .pixel_data(rgb),
+   .data_enable(rgb_enable),
+
+   .read_clock(clk9),
+   .read_x(read_x),
+   .read_y(read_y),
+   .read_q(read_data)
+   );
+*/
+
+/*
+reg do_send = 1'b0;
+wire uart_busy;
+reg uart_write;
+reg [12:0] uart_holdoff;
+reg [13:0] btn_debounce;
+reg btn_reg;
+
+uart_tx uart_i (
+   .clk(clk73),
+   .resetn(1'b1),
+   .ser_tx(ftdi_rxd),
+   .cfg_divider(73000000/115200),
+   .data_we(uart_write),
+   .data(read_data),
+   .data_wait(uart_busy)
+);
+
+reg sendPicture = 1'b0;
+
+always @(posedge clk9)
+begin
+
+//      btn_reg <= btn[0];
+//      btn_reg <= (sendPicture);
+//      if (btn_reg)
+//              btn_debounce <= 0;
+//      else if (!&(btn_debounce))
+//              btn_debounce <= btn_debounce + 1;
+
+        uart_write <= 1'b0;
+        if (!savePic && !do_send) begin
+                do_send <= 1'b1;
+                buffer_we <= 1'b0;
+                read_x <= 0;
+                read_y <= 0;
+        end
+                if (uart_busy)
+                        uart_holdoff <= 0;
+                else if (!&(uart_holdoff))
+                        uart_holdoff <= uart_holdoff + 1'b1;
+
+                if (do_send) begin
+                        if (read_x == 0 && read_y == 240) begin
+                                do_send <= 1'b0;
+                        end else begin
+                                if (&uart_holdoff && !uart_busy && !uart_write) begin
+                                        uart_write <= 1'b1;
+                                        rgb_data_counter_out <= rgb_data_counter_out + 1'b1;
+                                        if (read_x == 639) begin
+                                                read_y <= read_y + 1'b1;
+                                                read_x <= 0;
+
+                                        end else begin
+                                                read_x <= read_x + 1'b1;
+                                        end
+
+                                end
+                        end
+                end
+        end
+*/
+

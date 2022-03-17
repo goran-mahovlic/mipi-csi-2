@@ -37,6 +37,7 @@ VERILOG_FILES = \
   src/ov5647.sv \
   src/d_phy_receiver.v \
   src/camera.v \
+  src/decoders/raw8.sv \
   src/decoders/rgb565.v \
   src/header_ecc.v \
   src/downsample.v \
