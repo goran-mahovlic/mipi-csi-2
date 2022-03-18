@@ -30,7 +30,7 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../ecp5pll/hdl/sv/ecp5pll.sv \
+  src/ecp5pll.sv \
   src/clock.sv \
   src/i2c_master.sv \
   src/i2c_core.sv \
@@ -87,7 +87,7 @@ VHDL_FILES = \
 #YOSYS_OPTIONS = -noccu2
 NEXTPNR_OPTIONS = --timing-allow-fail --speed 6
 
-SCRIPTS = ../../scripts
+SCRIPTS = scripts
 include $(SCRIPTS)/diamond_path.mk
 include $(SCRIPTS)/trellis_path.mk
 include $(SCRIPTS)/trellis_main.mk
