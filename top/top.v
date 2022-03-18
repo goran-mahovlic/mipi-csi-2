@@ -87,8 +87,8 @@ ov5647 #(
     .format(1)
 );
 
-wire frame_start,frame_end,line_start,line_end, in_frame, in_line;
-wire short_data_enable,interrupt,valid_packet;
+wire frame_start,frame_end,line_start,line_end; //, in_frame, in_line;
+wire short_data_enable,interrupt;//,valid_packet;
 wire image_data_enable;
 
 wire [31:0] image_data;
@@ -134,10 +134,7 @@ camera #(
     .line_start(line_start),
     .line_end(line_end),
     .generic_short_data_enable(short_data_enable),
-    .generic_short_data(short_data),
-    .valid_packet(valid_packet),
-    .in_line(in_line),
-    .in_frame(in_frame)
+    .generic_short_data(short_data)
 );
 
 reg [9:0] read_x;
@@ -209,7 +206,7 @@ end
 always @(posedge pixel_clock)
 begin
 
- if( ({rgb_enable, last_rgb_enable} == 2'b10) && startupDelay && in_line && in_frame)
+ if( ({rgb_enable, last_rgb_enable} == 2'b10) && startupDelay)
    begin
 
       if(frame_start)
