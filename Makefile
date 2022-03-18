@@ -18,7 +18,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../constraints/ulx4m-ld_v001.lpf
+CONSTRAINTS = ulx4m-ld_v001.lpf
 #TOP_MODULE = top
 #TOP_MODULE_FILE = top/$(TOP_MODULE).v
 TOP_MODULE = top
