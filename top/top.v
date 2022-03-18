@@ -64,7 +64,6 @@ wire [1:0] mode = 2;
 ov5647 #(
    .INPUT_CLK_RATE(25000000),
    .TARGET_SCL_RATE(400000)
-   //.ADDRESS(54)
 )
  ov5647_0_i(
   .clk_in(clk_25mhz),
@@ -73,17 +72,11 @@ ov5647 #(
   .mode(mode),
   .resolution(3),
   .format(1)
-//  .sensor_state(led[2:0])
-  //.ready(led[4]),
-  //.power_enable(led[5]),
-  //.model_err(led[5])
- // .nack_err(led[5])
 );
 
 ov5647 #(
    .INPUT_CLK_RATE(25000000),
    .TARGET_SCL_RATE(400000)
-//   .ADDRESS(54)
 )
    ov5647_1_i(
     .clk_in(clk_25mhz),
@@ -92,9 +85,6 @@ ov5647 #(
     .mode(mode),
     .resolution(3),
     .format(1)
-//    .model_err(led[0])
-//    .ready(led[2]),
-//    .power_enable(led[3])
 );
 
 wire frame_start,frame_end,line_start,line_end, in_frame, in_line;
@@ -167,7 +157,7 @@ raw8 raw8_i(
     .raw_enable(rgb_enable)
 );
 
-/*
+/* Not implemented
 rgb565 rgb565_i(
     .image_data(image_data),
     .image_data_enable(image_data_enable),
@@ -175,7 +165,8 @@ rgb565 rgb565_i(
     .rgb_enable(rgb_enable)
 );
 */
-/*
+
+/* Not implemented
 rgb888 rgb888_i(
     .clock_p(cam0_clk_p),
     .clock_n(~cam0_clk_p),
@@ -258,4 +249,3 @@ end
 assign led[7:0] = counter0[25:18];
 
 endmodule
-
