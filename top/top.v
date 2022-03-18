@@ -167,7 +167,6 @@ raw8 raw8_i(
     .raw_enable(rgb_enable)
 );
 
-
 /*
 rgb565 rgb565_i(
     .image_data(image_data),
@@ -205,17 +204,11 @@ reg savePic = 1'b1;
 reg startupDelay = 1'b0;
 reg [31:0] startupCounter;
 
-//  assign red_d[7:0] = in_color[23:16];
-//  assign green_d[7:0] = in_color[15:8];
-//  assign blue_d[7:0] = in_color[7:0];
-//  111 111 11
-
 always @(posedge pixel_clock)
 begin
     if(!savePic && !buffer_we) begin
         rgb_data_counter_out <= (((y * 640) - 640) + x);
-        //color <= { 16'b0, read_data[11], 7'b0 } ;//read_data; //{ read_data[7:5] , 5'b00000 , read_data[4:2] , 5'b00000 , read_data[1:0] , 6'b000000 };
-        color <= { read_data[7:3], 3'b000 ,read_data[7:3], 3'b000 ,read_data[7:3], 3'b000};//{ read_data[0] ,7'b0000000, read_data[1] , 7'b0000000 , read_data[7:3], 3'b0000 };
+        color <= { read_data[7:3], 3'b000 ,read_data[7:3], 3'b000 ,read_data[7:3], 3'b000 };
     end
     else begin
         color <= 24'hffffff;
@@ -225,25 +218,18 @@ end
 always @(posedge pixel_clock)
 begin
 
-//  if( ({image_data_enable, last_rgb_enable} == 2'b10) && startupDelay )
-  if( ({rgb_enable, last_rgb_enable} == 2'b10) && startupDelay && in_line && in_frame)
-  begin
+ if( ({rgb_enable, last_rgb_enable} == 2'b10) && startupDelay && in_line && in_frame)
+   begin
 
       if(frame_start)
           rgb_data_counter <= 1'b0;
 
       rgb_data_counter <= rgb_data_counter + 1'b1;
 
-      //led[7:0] <= rgb[7:0];
-
       if(rgb_data_counter<153600 && savePic) // 640x480 - save only once
       begin
-          //write_data <= { image_data[29] , image_data[28] , image_data[27] , image_data[23] , image_data[22] , image_data[21] , image_data[17], image_data[16] };  // read_data[7:5] , 5'b0 , read_data[4:2] , 5'b0 , read_data[1:0] , 6'b0
-          //write_data <= { image_data[31:29] , image_data[23:21], image_data[15:14] } ; //rgb[20] , rgb[19] }; 
-          // write_data <= { image_data[23:21] , image_data[2:0] , image_data[14:13] }; // image_data[15:3], image_data[7:6] };
-          write_data <= rgb; // image_data[15:3], image_data[7:6] };
-      end //rgb[29] , rgb[28] , rgb[27]        g -- rgb[7:5], 19, 16   29:27 == 14 15     0?
-      // 23:21
+          write_data <= rgb;
+      end
       else begin
           savePic <= 1'b0;
           buffer_we <= 1'b0;
@@ -255,8 +241,6 @@ end
 always @(posedge image_data_enable)
 begin
     startupCounter <= startupCounter + 1'b1;
-    //if(startupCounter[20] && frame_end == 1'b1)
-    //    startupDelay <= 1'b1;
 end
 
 always @(posedge cam0_clk_p)
@@ -264,10 +248,6 @@ begin
     if(startupCounter[20] && frame_end)
         startupDelay <= 1'b1;
     counter0 <= counter0 + 1'b1;
-//    if(counter0[26])
-//     mode <= 2'b01;
-//    if(counter0[27])
-//     mode <= 2'b10;
 end
 
 always @(posedge cam1_clk_p)
@@ -276,16 +256,6 @@ begin
 end
 
 assign led[7:0] = counter0[25:18];
-
-//assign led[7:6] = counter0[25:24];
-//assign led[1:0] = counter1[25:24];
-//assign led[7:3] = 5'b00000;
-//assign led[4] = 1'b0;
-//assign led[3] = 1'b0;
-//assign led[2] = 1'b0;
-//assign led[1] = 1'b0;
-//assign led[0] = 1'b0;
-//assign led[2:1] = mode;
 
 endmodule
 
