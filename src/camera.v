@@ -12,16 +12,10 @@ module camera (
 	line_start,
 	line_end,
 	generic_short_data_enable,
-	generic_short_data,
-        valid_packet,
-        video_data,
-        in_frame,
-        in_line
+	generic_short_data
 );
 	parameter signed [31:0] NUM_LANES = 2;
 	parameter signed [31:0] ZERO_ACCUMULATOR_WIDTH = 3;
-        parameter signed [1:0] VC = 2'b00;
-        parameter [5:0] VIDEO_DT = 6'h2B;
 	input wire clock_p;
 	input wire [NUM_LANES - 1:0] data_p;
 	output wire [1:0] virtual_channel;
@@ -34,10 +28,6 @@ module camera (
 	output wire frame_end;
 	output wire line_start;
 	output wire line_end;
-        output wire valid_packet;
-        output wire video_data;
-        output reg in_frame;
-        output reg in_line;
 	output wire generic_short_data_enable;
 	output wire [15:0] generic_short_data;
 	function automatic signed [NUM_LANES - 1:0] sv2v_cast_F4A11_signed;
@@ -47,15 +37,6 @@ module camera (
 	reg [NUM_LANES - 1:0] reset = sv2v_cast_F4A11_signed(0);
 	wire [7:0] data [NUM_LANES - 1:0];
 	wire [NUM_LANES - 1:0] enable;
-        wire [7:0] expected_ecc;
-
-        csi_header_ecc ecc_i (
-            .data(packet_header[23:0]),
-            .ecc(expected_ecc)
-        );
-
-        assign valid_packet = (virtual_channel == VC) && (frame_start || frame_end || video_data) && (header_ecc == expected_ecc);
-
 	genvar i;
 	generate
 		for (i = 0; i < NUM_LANES; i = i + 1) begin : lane_receivers
@@ -77,7 +58,6 @@ module camera (
 	assign frame_end = data_type == 6'd1;
 	assign line_start = data_type == 6'd2;
 	assign line_end = data_type == 6'd3;
-        assign video_data = data_type == VIDEO_DT;
 	assign generic_short_data_enable = ((data_type >= 6'd8) && (data_type <= 6'h0f)) && reset[0];
 	assign generic_short_data = word_count;
 	assign word_count = {packet_header[16+:8], packet_header[8+:8]};
@@ -103,21 +83,6 @@ module camera (
 		input reg [16:0] inp;
 		sv2v_cast_17 = inp;
 	endfunction
-
-
-always @(posedge clock_p) begin
-    if (frame_start)
-          in_frame <= 1'b1;
-    else if (frame_end)
-          in_frame <= 1'b0;
-    else if (line_start)
-          in_line <= 1'b1;
-    else if (line_end)
-          in_line <= 1'b0;
-    end
-
-
-
 	always @(posedge clock_p) begin
 		for (j = 0; j < NUM_LANES; j = j + 1)
 			if (enable[j])
