@@ -80,12 +80,19 @@ logic [24:0] PRE_STREAM [0:88];
 
 initial begin
     PRE_STREAM[0] =   {1'b0, 16'h3034, 8'h08}; // PLL ctrl0: mipi 10 bit mode
-    PRE_STREAM[1] =   {1'b0, 16'h3035, 8'h41}; // SC common PLL ctrl1:  system_clk_div by 4, scale_divider_mipi by 1
+    PRE_STREAM[1] =   {1'b0, 16'h3035, 8'h41}; // SC common PLL ctrl1:  system_clk_div by 4, scale_divider_mipi by 1 // 101001
     PRE_STREAM[2] =   {1'b0, 16'h3036, 8'h46}; // PLL multiplier: times 70
     PRE_STREAM[3] =   {1'b0, 16'h303c, 8'h11}; // PLLS ctrl2: plls_cp 1, plls_sys_div by 1
     PRE_STREAM[4] =   {1'b0, 16'h3106, 8'hf5}; // SRB ctrl: pll_sclk / 4, enable sclk to arbiter
-    PRE_STREAM[5] =   {1'b0, 16'h3821, 8'h07}; // Timing TC: r_mirror_isp, r_mirror_snr, r_hbin
-    PRE_STREAM[6] =   {1'b0, 16'h3820, 8'h41}; // Timing TC: r_vbin, 1 unknown setting
+    PRE_STREAM[5] =   {1'b0, 16'h3821, 8'h06}; // Timing TC: r_mirror_isp, r_mirror_snr, r_hbin
+    PRE_STREAM[6] =   {1'b0, 16'h3820, 8'h40}; // Timing TC: r_vbin, 1 unknown setting
+//    PRE_STREAM[0] =   {1'b0, 16'h3034, 8'h1A}; // PLL ctrl0: mipi 10 bit mode
+//    PRE_STREAM[1] =   {1'b0, 16'h3035, 8'h21}; // SC common PLL ctrl1:  system_clk_div by 4, scale_divider_mipi by 1 // 101001
+//    PRE_STREAM[2] =   {1'b0, 16'h3036, 8'h62}; // PLL multiplier: times 70
+//    PRE_STREAM[3] =   {1'b0, 16'h303c, 8'h11}; // PLLS ctrl2: plls_cp 1, plls_sys_div by 1
+//    PRE_STREAM[4] =   {1'b0, 16'h3106, 8'hf5}; // SRB ctrl: pll_sclk / 4, enable sclk to arbiter
+//    PRE_STREAM[5] =   {1'b0, 16'h3821, 8'h02}; // Timing TC: r_mirror_isp, r_mirror_snr, r_hbin
+//    PRE_STREAM[6] =   {1'b0, 16'h3820, 8'h00}; // Timing TC: r_vbin, 1 unknown setting
     PRE_STREAM[7] =   {1'b0, 16'h3827, 8'hec}; // Debug mode
     PRE_STREAM[8] =   {1'b0, 16'h370c, 8'h0f}; // ???
     PRE_STREAM[9] =   {1'b0, 16'h3612, 8'h59}; // ???
@@ -111,14 +118,22 @@ initial begin
     PRE_STREAM[29] =   {1'b0, 16'h380d, 8'h68}; // ctd.
     PRE_STREAM[30] =   {1'b0, 16'h380e, 8'h03}; // total vertical size = 984
     PRE_STREAM[31] =   {1'b0, 16'h380f, 8'hd8}; // ctd.
-    PRE_STREAM[32] =   {1'b0, 16'h3814, 8'h31}; // horizontal subsample odd increase number = 1, horizontal subsample even increase number = 3
-    PRE_STREAM[33] =   {1'b0, 16'h3815, 8'h31}; // vertical subsample odd increase number = 1, vertical subsample even increase number = 3
+//    PRE_STREAM[28] =   {1'b0, 16'h380c, 8'h09}; // total horizontal size = 1896
+//    PRE_STREAM[29] =   {1'b0, 16'h380d, 8'h70}; // ctd.
+//    PRE_STREAM[30] =   {1'b0, 16'h380e, 8'h04}; // total vertical size = 984
+//    PRE_STREAM[31] =   {1'b0, 16'h380f, 8'h66}; // ctd.
+    PRE_STREAM[32] =   {1'b0, 16'h3814, 8'h31}; // 31 horizontal subsample odd increase number = 1, horizontal subsample even increase number = 3
+    PRE_STREAM[33] =   {1'b0, 16'h3815, 8'h31}; // 31 vertical subsample odd increase number = 1, vertical subsample even increase number = 3
     PRE_STREAM[34] =   {1'b0, 16'h3708, 8'h64}; // ???
     PRE_STREAM[35] =   {1'b0, 16'h3709, 8'h52}; // ???
     PRE_STREAM[36] =   {1'b0, 16'h3808, 8'h02}; // x output size = 640
     PRE_STREAM[37] =   {1'b0, 16'h3809, 8'h80}; // ctd.
     PRE_STREAM[38] =   {1'b0, 16'h380a, 8'h01}; // y output size = 480
     PRE_STREAM[39] =   {1'b0, 16'h380b, 8'he0}; // ctd.
+//    PRE_STREAM[36] =   {1'b0, 16'h3808, 8'h0a}; // x output size = 640
+//    PRE_STREAM[37] =   {1'b0, 16'h3809, 8'h3f}; // ctd.
+//    PRE_STREAM[38] =   {1'b0, 16'h380a, 8'h07}; // y output size = 480
+//    PRE_STREAM[39] =   {1'b0, 16'h380b, 8'ha1}; // ctd.
     PRE_STREAM[40] =   {1'b0, 16'h3800, 8'h00}; // x addr start = 0
     PRE_STREAM[41] =   {1'b0, 16'h3801, 8'h00}; // ctd.
     PRE_STREAM[42] =   {1'b0, 16'h3802, 8'h00}; // y addr start = 0
@@ -127,7 +142,11 @@ initial begin
     PRE_STREAM[45] =   {1'b0, 16'h3805, 8'h3f}; // ctd.
     PRE_STREAM[46] =   {1'b0, 16'h3806, 8'h07}; // y addr end = 1953
     PRE_STREAM[47] =   {1'b0, 16'h3807, 8'ha1}; // ctd.
-    PRE_STREAM[48] =   {1'b0, 16'h3811, 8'h08}; // ISP horizontal offset = 8
+//    PRE_STREAM[44] =   {1'b0, 16'h3804, 8'h08}; // x addr end = 2623
+//    PRE_STREAM[45] =   {1'b0, 16'h3805, 8'he3}; // ctd.
+//    PRE_STREAM[46] =   {1'b0, 16'h3806, 8'h05}; // y addr end = 1953
+//    PRE_STREAM[47] =   {1'b0, 16'h3807, 8'hf1}; // ctd.
+    PRE_STREAM[48] =   {1'b0, 16'h3811, 8'h08}; // bilo 08 ISP horizontal offset = 8
     PRE_STREAM[49] =   {1'b0, 16'h3813, 8'h02}; // ISP vertical offset = 2
     PRE_STREAM[50] =   {1'b0, 16'h3630, 8'h2e};
     PRE_STREAM[51] =   {1'b0, 16'h3632, 8'he2};
@@ -165,8 +184,8 @@ initial begin
     PRE_STREAM[83] =   {1'b0, 16'h4837, 8'h24}; // PCLK_PERIOD
     PRE_STREAM[84] =   {1'b0, 16'h4050, 8'h6e}; // BLC max
     PRE_STREAM[85] =   {1'b0, 16'h4051, 8'h8f}; // BLC stable range
-//    PRE_STREAM[86] =   {1'b0, 16'h503d, 8'b00000000}; // test pattern control
-    PRE_STREAM[86] =   {1'b0, 16'h503d, 8'h90}; // test pattern control
+    PRE_STREAM[86] =   {1'b0, 16'h503d, 8'b00000000}; // test pattern control
+//    PRE_STREAM[86] =   {1'b0, 16'h503d, 8'h90}; // test pattern control
     PRE_STREAM[87] =   {1'b0, 16'h4800, 8'b00000100}; // MIPI ctrl
     PRE_STREAM[88] =   {1'b0, 16'h0100, 8'h01};
 end

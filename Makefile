@@ -38,7 +38,8 @@ VERILOG_FILES = \
   src/d_phy_receiver.v \
   src/camera.v \
   src/decoders/raw8.sv \
-  src/decoders/rgb565.v \
+  src/decoders/rgb565.sv \
+  src/decoders/rgb888.sv \
   src/header_ecc.v \
   src/downsample.v \
   src/buffer.v \

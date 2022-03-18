@@ -20,7 +20,9 @@ assign rgb_enable[1] = image_data_enable && state == 2'd2;
 
 assign rgb[23:0] = state == 2'd0 ? {image_data[23:16], image_data[15:8], image_data[7:0]}
                  : state == 2'd1 ? {image_data[15:8], image_data[7:0], last_upper_image_data[31:24]}
-                 : state == 2'd2 ? {image_data[7:0], last_upper_image_data[31:24], last_upper_image_data[23:16]};
+                 : state == 2'd2 ? {image_data[7:0], last_upper_image_data[31:24], last_upper_image_data[23:16]} 
+                 : 0;
+
 
 assign rgb[47:24] = {image_data[31:24], image_data[23:16], image_data[15:8]};
 

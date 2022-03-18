@@ -22,9 +22,6 @@ assign wifi_rxd = ftdi_txd;
 
 assign cam_enable = 1'b1; 
 
-//assign gpio_sda = cam_sda;
-//assign gpio_scl = cam_scl;
-
 reg [19:0] rgb_data_counter = 0;
 reg [19:0] rgb_data_counter_out = 0;
 
@@ -42,9 +39,6 @@ ILVDS ILVDS_cam0_data1_inst (.A(dsiRX0_dp[1]),.Z(cam0_data_p[1]));
 ILVDS ILVDS_cam1_clk_inst (.A(dsiRX1_clk_dp),.Z(cam1_clk_p));
 ILVDS ILVDS_cam1_data0_inst (.A(dsiRX1_dp[0]),.Z(cam1_data_p[0]));
 ILVDS ILVDS_cam1_data1_inst (.A(dsiRX1_dp[1]),.Z(cam1_data_p[1]));
-
-//assign led[0] = cam_sda;
-//assign led[1] = cam_scl;
 
 wire [3:0] clks;
 wire clk9,clk73,clk18;
@@ -161,7 +155,10 @@ reg [9:0] read_y;
 wire [23:0] read_data;
 reg [23:0] write_data;
 wire rgb_enable;
+wire [1:0] rgb888_enable;
 wire [31:0] rgb;
+
+assign rgb_enable = rgb888_enable[1];
 
 raw8 raw8_i(
     .image_data(image_data),
@@ -169,6 +166,26 @@ raw8 raw8_i(
     .raw(rgb),
     .raw_enable(rgb_enable)
 );
+
+
+/*
+rgb565 rgb565_i(
+    .image_data(image_data),
+    .image_data_enable(image_data_enable),
+    .rgb(rgb),
+    .rgb_enable(rgb_enable)
+);
+*/
+/*
+rgb888 rgb888_i(
+    .clock_p(cam0_clk_p),
+    .clock_n(~cam0_clk_p),
+    .image_data(image_data),
+    .image_data_enable(image_data_enable),
+    .rgb(rgb),
+    .rgb_enable(rgb_enable)
+);
+*/
 
 reg buffer_we;
 initial buffer_we = 1'b1;
@@ -197,7 +214,8 @@ always @(posedge pixel_clock)
 begin
     if(!savePic && !buffer_we) begin
         rgb_data_counter_out <= (((y * 640) - 640) + x);
-        color <= { read_data[7:5] , 5'b00000 , read_data[4:2] , 5'b00000 , read_data[1:0] , 6'b000000 };
+        //color <= { 16'b0, read_data[11], 7'b0 } ;//read_data; //{ read_data[7:5] , 5'b00000 , read_data[4:2] , 5'b00000 , read_data[1:0] , 6'b000000 };
+        color <= read_data;//{ read_data[0] ,7'b0000000, read_data[1] , 7'b0000000 , read_data[7:3], 3'b0000 };
     end
     else begin
         color <= 24'hffffff;
@@ -207,7 +225,8 @@ end
 always @(posedge pixel_clock)
 begin
 
-  if( ({image_data_enable, last_rgb_enable} == 2'b10) && startupDelay )
+//  if( ({image_data_enable, last_rgb_enable} == 2'b10) && startupDelay )
+  if( ({rgb_enable, last_rgb_enable} == 2'b10) && startupDelay && in_line && in_frame)
   begin
 
       if(frame_start)
@@ -221,7 +240,8 @@ begin
       begin
           //write_data <= { image_data[29] , image_data[28] , image_data[27] , image_data[23] , image_data[22] , image_data[21] , image_data[17], image_data[16] };  // read_data[7:5] , 5'b0 , read_data[4:2] , 5'b0 , read_data[1:0] , 6'b0
           //write_data <= { image_data[31:29] , image_data[23:21], image_data[15:14] } ; //rgb[20] , rgb[19] }; 
-          write_data <= { image_data[23:21] , image_data[2:0] , image_data[14:13] }; // image_data[15:3], image_data[7:6] };
+          // write_data <= { image_data[23:21] , image_data[2:0] , image_data[14:13] }; // image_data[15:3], image_data[7:6] };
+          write_data <= rgb; // image_data[15:3], image_data[7:6] };
       end //rgb[29] , rgb[28] , rgb[27]        g -- rgb[7:5], 19, 16   29:27 == 14 15     0?
       // 23:21
       else begin
@@ -235,12 +255,14 @@ end
 always @(posedge image_data_enable)
 begin
     startupCounter <= startupCounter + 1'b1;
-    if(startupCounter[20])
-        startupDelay <= 1'b1;
+    //if(startupCounter[20] && frame_end == 1'b1)
+    //    startupDelay <= 1'b1;
 end
 
 always @(posedge cam0_clk_p)
 begin
+    if(startupCounter[20] && frame_end)
+        startupDelay <= 1'b1;
     counter0 <= counter0 + 1'b1;
 //    if(counter0[26])
 //     mode <= 2'b01;
@@ -253,9 +275,11 @@ begin
     counter1 <= counter1 + 1'b1;
 end
 
+assign led[7:0] = counter0[25:18];
+
 //assign led[7:6] = counter0[25:24];
 //assign led[1:0] = counter1[25:24];
-assign led[7:3] = 5'b00000;
+//assign led[7:3] = 5'b00000;
 //assign led[4] = 1'b0;
 //assign led[3] = 1'b0;
 //assign led[2] = 1'b0;
@@ -264,84 +288,4 @@ assign led[7:3] = 5'b00000;
 //assign led[2:1] = mode;
 
 endmodule
-
-
-/*
-// Not used
-downsample ds_i(
-   .pixel_clock(pixel_clock),
-   .in_line(in_line),
-   .in_frame(in_frame),
-   .pixel_data(rgb),
-   .data_enable(rgb_enable),
-
-   .read_clock(clk9),
-   .read_x(read_x),
-   .read_y(read_y),
-   .read_q(read_data)
-   );
-*/
-
-/*
-reg do_send = 1'b0;
-wire uart_busy;
-reg uart_write;
-reg [12:0] uart_holdoff;
-reg [13:0] btn_debounce;
-reg btn_reg;
-
-uart_tx uart_i (
-   .clk(clk73),
-   .resetn(1'b1),
-   .ser_tx(ftdi_rxd),
-   .cfg_divider(73000000/115200),
-   .data_we(uart_write),
-   .data(read_data),
-   .data_wait(uart_busy)
-);
-
-reg sendPicture = 1'b0;
-
-always @(posedge clk9)
-begin
-
-//      btn_reg <= btn[0];
-//      btn_reg <= (sendPicture);
-//      if (btn_reg)
-//              btn_debounce <= 0;
-//      else if (!&(btn_debounce))
-//              btn_debounce <= btn_debounce + 1;
-
-        uart_write <= 1'b0;
-        if (!savePic && !do_send) begin
-                do_send <= 1'b1;
-                buffer_we <= 1'b0;
-                read_x <= 0;
-                read_y <= 0;
-        end
-                if (uart_busy)
-                        uart_holdoff <= 0;
-                else if (!&(uart_holdoff))
-                        uart_holdoff <= uart_holdoff + 1'b1;
-
-                if (do_send) begin
-                        if (read_x == 0 && read_y == 240) begin
-                                do_send <= 1'b0;
-                        end else begin
-                                if (&uart_holdoff && !uart_busy && !uart_write) begin
-                                        uart_write <= 1'b1;
-                                        rgb_data_counter_out <= rgb_data_counter_out + 1'b1;
-                                        if (read_x == 639) begin
-                                                read_y <= read_y + 1'b1;
-                                                read_x <= 0;
-
-                                        end else begin
-                                                read_x <= read_x + 1'b1;
-                                        end
-
-                                end
-                        end
-                end
-        end
-*/
 
