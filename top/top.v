@@ -215,7 +215,7 @@ begin
     if(!savePic && !buffer_we) begin
         rgb_data_counter_out <= (((y * 640) - 640) + x);
         //color <= { 16'b0, read_data[11], 7'b0 } ;//read_data; //{ read_data[7:5] , 5'b00000 , read_data[4:2] , 5'b00000 , read_data[1:0] , 6'b000000 };
-        color <= read_data;//{ read_data[0] ,7'b0000000, read_data[1] , 7'b0000000 , read_data[7:3], 3'b0000 };
+        color <= { read_data[7:3], 3'b000 ,read_data[7:3], 3'b000 ,read_data[7:3], 3'b000};//{ read_data[0] ,7'b0000000, read_data[1] , 7'b0000000 , read_data[7:3], 3'b0000 };
     end
     else begin
         color <= 24'hffffff;
