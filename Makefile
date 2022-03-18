@@ -35,8 +35,8 @@ VERILOG_FILES = \
   src/i2c_master.sv \
   src/i2c_core.sv \
   src/ov5647.sv \
-  src/d_phy_receiver.v \
-  src/camera.v \
+  src/d_phy_receiver.sv \
+  src/camera.sv \
   src/decoders/raw8.sv \
   src/decoders/rgb565.sv \
   src/decoders/rgb888.sv \
