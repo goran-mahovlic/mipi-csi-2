@@ -7,7 +7,9 @@ module buffer(
   input reg [7:0] data_in
 );
 
-reg [31:0] buffer[0:153600];
+//reg [31:0] buffer[0:153600]; // 45F - only one cam buffer 320x640
+reg [31:0] buffer[0:307200]; // 85F one cam buffer 640x480
+//reg [31:0] buffer[0:614400]; // 85F two cam buffer
 
   always @(posedge clk) begin
           if(we)

@@ -2,7 +2,7 @@
 PROJECT = CSI
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = um-45
+FPGA_SIZE = um-85
 FPGA_PACKAGE = CABGA381
 
 # ******* if programming with OpenOCD *******
@@ -18,7 +18,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ulx4m-ld_v001.lpf
+CONSTRAINTS = ulx4m-ld_v002.lpf
 #TOP_MODULE = top
 #TOP_MODULE_FILE = top/$(TOP_MODULE).v
 TOP_MODULE = top
@@ -85,7 +85,7 @@ VHDL_FILES = \
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2
-NEXTPNR_OPTIONS = --timing-allow-fail --speed 6
+NEXTPNR_OPTIONS = --timing-allow-fail --speed 7
 
 SCRIPTS = scripts
 include $(SCRIPTS)/diamond_path.mk
