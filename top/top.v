@@ -33,7 +33,7 @@ wire [3:0] clks_0, clks_1;
 
 assign clk73_cam0 = clks_0[1];
 assign clk73_cam1 = clks_1[1];
-assign clk25 = clks_0[0];
+assign clk25 = clk_25mhz;//clks_0[0];
 
 wire [1:0] cam0_data_p, cam1_data_p;
 
@@ -243,7 +243,7 @@ begin
     counter1 <= counter1 + 1'b1;
 end
 
-assign led[7:0] = counter0[26:19];
+assign led[7:0] = 8'b0; //counter0[26:19];
 endmodule
 
 
