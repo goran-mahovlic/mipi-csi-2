@@ -2,6 +2,18 @@
 
 [![Build Status](https://travis-ci.com/hdl-util/mipi-csi-2.svg?branch=master)](https://travis-ci.com/hdl-util/mipi-csi-2)
 
+## Build for ULX3S
+
+Download toolchain and add to path 
+
+https://github.com/YosysHQ/oss-cad-suite-build#installation
+
+make -f makefile_ulx3s
+
+You may also need vhd2vl
+
+https://github.com/ldoolitt/vhd2vl
+
 ## To-do List
 * Primary format decoding
     * [x] RGB888
