@@ -33,7 +33,7 @@ wire [3:0] clks_0, clks_1;
 
 assign clk73_cam0 = clks_0[1];
 assign clk73_cam1 = clks_1[1];
-assign clk25 = clk_25mhz;//clks_0[0];
+assign clk25 = clks_0[0];//clk_25mhz;//clks_0[0];
 
 wire [1:0] cam0_data_p, cam1_data_p;
 
@@ -58,10 +58,10 @@ wire [23:0] read_data_cam0,read_data_cam1;
 reg [23:0] write_data_cam0, write_data_cam1;
 wire [31:0] rgb_current_cam;
 reg last_rgb_enable;
-wire [7:5] value;
-reg savePic = 1'b1;
-reg startupDelay = 1'b0;
-reg [31:0] startupCounter;
+//wire [7:5] value;
+//reg savePic = 1'b1;
+//reg startupDelay = 1'b0;
+//reg [31:0] startupCounter;
 
 wire image_data_enable_current_cam, frame_end_current_cam, frame_start_current_cam;
 wire rgb_enable_current_cam;
@@ -187,8 +187,8 @@ begin
     end
     else if(!buffer_we_cam1) begin
         rgb_data_counter_out <= (((y * 640) - 640) + x);
-        color <= { read_data_cam1[7:3], 3'b000 ,read_data_cam1[7:3], 3'b000 ,read_data_cam1[7:3], 3'b000 };
-    end    
+            color <= { read_data_cam1[7:3], 3'b000 ,read_data_cam1[7:3], 3'b000 ,read_data_cam1[7:3], 3'b000 };
+    end
     else begin
         color <= 24'hffffff;
     end
@@ -200,32 +200,32 @@ begin
  if( ({rgb_enable_current_cam, last_rgb_enable} == 2'b10))
    begin
       if(frame_start_current_cam)
-          rgb_data_counter <= 1'b0;
+          rgb_data_counter <= 0;
 
       rgb_data_counter <= rgb_data_counter + 1'b1;
 
       if(rgb_data_counter<307200) // 640x480 CAM0
       begin
-          write_data_cam0 <= rgb_current_cam;
+        write_data_cam0 <= rgb_current_cam;
       end
       else if(rgb_data_counter==307200) // 640x480 CAM0
       begin
           last_rgb_enable <= 0;
-          frame_start_current_cam <= 0;
+          //frame_start_current_cam <= 0;
           cam0 <= 1'b0;
           buffer_we_cam0 <= 1'b0;
           buffer_we_cam1 <= 1'b1;          
       end              
-      else if(rgb_data_counter>307200 && rgb_data_counter<614400) // 640x480 - CAM1
+      else if(rgb_data_counter>307200 && rgb_data_counter<614401) // 640x480 - CAM1
       begin
-          write_data_cam1 <= rgb_current_cam;
+        write_data_cam1 <= rgb_current_cam;
       end
-      else if(rgb_data_counter == 614400) // 640x480 - CAM1
+      else if(rgb_data_counter == 614401) // 640x480 - CAM1
       begin
           cam0 <= 1'b1;
           buffer_we_cam0 <= 1'b1;
           buffer_we_cam1 <= 1'b0;
-          frame_start_current_cam <= 0; 
+          //frame_start_current_cam <= 0; 
           rgb_data_counter <= 0;
           last_rgb_enable <= 0;
       end
@@ -235,7 +235,7 @@ begin
           buffer_we_cam1 <= 1'b0;       
       end
    end
-  last_rgb_enable <= image_data_enable_current_cam;
+  last_rgb_enable <= rgb_enable_current_cam;
 end
 
 always @(posedge buffer_clock_cam0)
